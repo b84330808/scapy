@@ -18,9 +18,11 @@ This is a Scapy Automaton that is supposedly easily extendable.
 """
 
 import hashlib
+import os
 import pathlib
 import socket
 import struct
+import sys
 import time
 
 from scapy.arch import get_if_addr
@@ -1067,7 +1069,13 @@ class SMB_Server(Automaton):
         # Note: symbolic links are currently unsupported.
         if root not in path.parents and path != root:
             raise FileNotFoundError
-        if WINDOWS and path.is_reserved():
+        # PurePath.is_reserved() is deprecated since Python 3.13 and was
+        # removed in 3.15
+        if WINDOWS and (
+            os.path.isreserved(path)
+            if sys.version_info >= (3, 13)
+            else path.is_reserved()
+        ):
             raise FileNotFoundError
         if not path.exists():
             if create and createOptions:
